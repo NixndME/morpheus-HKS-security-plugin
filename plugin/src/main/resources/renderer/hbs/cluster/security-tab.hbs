@@ -58,6 +58,12 @@ tr.hs-click:hover td{background:rgba(1,169,130,.06)}
 .hs-panel tr.hs-detail table tbody tr:nth-child(odd) td{background:rgba(125,138,148,.08)!important}
 .hs-fix{font:12px monospace;color:var(--hs-muted)}
 .hs-src{font-size:11px;color:var(--hs-muted);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 2px}
+.hs-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end;margin-left:auto}
+.hs-scanform{gap:8px;align-items:center}.hs-scope{margin:0 6px 0 0;font-weight:normal;font-size:12px;white-space:nowrap;cursor:pointer}
+.hs-trend{font-size:12px;color:var(--hs-muted);max-width:260px}.hs-trend svg{display:block;margin-bottom:4px}
+.hs-sysbtn{margin:0 0 0 auto;padding:7px 4px;font-weight:normal;font-size:12px;cursor:pointer;color:var(--hs-muted)}
+.hs-sysbtn .hs-on{display:none}#hs-hide-sys:checked~.hs-tabs .hs-sysbtn .hs-on{display:inline}#hs-hide-sys:checked~.hs-tabs .hs-sysbtn .hs-off{display:none}
+#hs-hide-sys:checked~.hs-views tr.hs-sys{display:none!important}
 .hs-pop{position:fixed;inset:0;margin:auto;width:min(520px,92vw);height:fit-content;padding:16px;border:1px solid var(--hs-line);border-radius:6px;background:#2b3036;color:#e6eaee;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 .hs-pop::backdrop{background:rgba(0,0,0,.4)}
 {{{rowCss}}}
@@ -68,11 +74,12 @@ tr.hs-click:hover td{background:rgba(1,169,130,.06)}
   <span class="hs-muted">Trivy + Kubescape</span>
   {{#if hasReport}}<span class="hs-muted">· last scan {{scannedAgo}} · {{scanKind}}</span>{{/if}}
   <span class="hs-spacer"></span>
-  {{#if hasReport}}
+  {{#if hasReport}}<div class="hs-actions">
     <a class="btn btn-default hs-btn" href="/plugin/hks-security/report?clusterId={{clusterId}}" target="_blank" rel="noopener">Export PDF</a>
     {{#if canScan}}{{#unless busy}}
-    <form method="post" action="/plugin/hks-security/scan"><input type="hidden" name="{{csrfParam}}" value="{{csrfToken}}"/><input type="hidden" name="clusterId" value="{{clusterId}}"/><input type="hidden" name="mode" value="quick"/><button class="btn btn-primary hs-btn" type="submit">Quick scan</button></form>
-    <form method="post" action="/plugin/hks-security/scan"><input type="hidden" name="{{csrfParam}}" value="{{csrfToken}}"/><input type="hidden" name="clusterId" value="{{clusterId}}"/><input type="hidden" name="mode" value="full"/><button class="btn btn-primary hs-btn" type="submit">Full scan</button></form>
+    <form method="post" action="/plugin/hks-security/scan" class="hs-scanform"><input type="hidden" name="{{csrfParam}}" value="{{csrfToken}}"/><input type="hidden" name="clusterId" value="{{clusterId}}"/>
+      <label class="hs-scope" title="Skip kube-system, Calico, Rook/Ceph, ingress, logging and monitoring"><input type="checkbox" name="appsOnly" value="true"{{#if appsOnly}} checked{{/if}}/> Only application namespaces</label>
+      <button class="btn btn-primary hs-btn" type="submit" name="mode" value="quick">Quick scan</button><button class="btn btn-primary hs-btn" type="submit" name="mode" value="full">Full scan</button></form>
     <button type="button" class="button button-red hs-btn" popovertarget="hs-remove">Remove</button>
     <form id="hs-remove" popover class="hs-pop" method="post" action="/plugin/hks-security/remove">
       <input type="hidden" name="{{csrfParam}}" value="{{csrfToken}}"/><input type="hidden" name="clusterId" value="{{clusterId}}"/>
@@ -81,7 +88,7 @@ tr.hs-click:hover td{background:rgba(1,169,130,.06)}
       <div style="display:flex;gap:8px"><button class="button button-red hs-btn" type="submit">Remove</button><button type="button" class="btn btn-default hs-btn" popovertarget="hs-remove" popovertargetaction="hide">Cancel</button></div>
     </form>
     {{/unless}}{{/if}}
-  {{/if}}
+  </div>{{/if}}
 </div>
 
 {{#if hasError}}<div class="hs-card hs-error">{{error}}</div>{{/if}}
@@ -96,11 +103,13 @@ tr.hs-click:hover td{background:rgba(1,169,130,.06)}
     <li>A namespace <code>hks-security</code> and a read-only service account are created on the first scan.</li>
     <li>The scanners run as one-off jobs, one after the other, on the node with the most free memory (at most 1 CPU and 1 GiB each), then they are removed. Nothing runs between scans.</li>
     <li>A quick scan takes about a minute. A full scan downloads every container image to check it, so it takes much longer.</li>
+    <li>Tick <b>Only application namespaces</b> to skip what HKS itself runs (kube-system, Calico, Rook/Ceph, ingress, logging, monitoring).</li>
   </ul>
   {{#if canScan}}{{#unless busy}}
-  <div style="display:flex;gap:8px;margin-top:12px">
-    <form method="post" action="/plugin/hks-security/scan"><input type="hidden" name="{{csrfParam}}" value="{{csrfToken}}"/><input type="hidden" name="clusterId" value="{{clusterId}}"/><input type="hidden" name="mode" value="quick"/><button class="btn btn-primary hs-btn" type="submit">Quick scan</button></form>
-    <form method="post" action="/plugin/hks-security/scan"><input type="hidden" name="{{csrfParam}}" value="{{csrfToken}}"/><input type="hidden" name="clusterId" value="{{clusterId}}"/><input type="hidden" name="mode" value="full"/><button class="btn btn-default hs-btn" type="submit">Full scan</button></form>
+  <div style="margin-top:12px">
+    <form method="post" action="/plugin/hks-security/scan" class="hs-scanform"><input type="hidden" name="{{csrfParam}}" value="{{csrfToken}}"/><input type="hidden" name="clusterId" value="{{clusterId}}"/>
+      <label class="hs-scope" title="Skip kube-system, Calico, Rook/Ceph, ingress, logging and monitoring"><input type="checkbox" name="appsOnly" value="true"{{#if appsOnly}} checked{{/if}}/> Only application namespaces</label>
+      <button class="btn btn-primary hs-btn" type="submit" name="mode" value="quick">Quick scan</button><button class="btn btn-primary hs-btn" type="submit" name="mode" value="full">Full scan</button></form>
   </div>
   {{/unless}}{{else}}<p class="hs-muted">Ask someone with full HKS Security access to run the first scan.</p>{{/if}}
 </div>
@@ -161,6 +170,10 @@ tr.hs-click:hover td{background:rgba(1,169,130,.06)}
     {{#each frameworks}}<div><span class="hs-muted">{{name}}</span> <b>{{score}}%</b><div class="hs-bartrack"><i style="width:{{score}}%"></i></div></div>{{/each}}
     <div class="hs-muted" style="font-size:12px">Scanned {{scannedAt}}</div>
   </div>
+  <div class="hs-trend">
+    {{#if hasTrend}}<div>Compliance, last {{historySize}} scans of this kind</div><svg width="160" height="42" viewBox="0 -1 160 42"><polyline points="{{trendPoints}}" fill="none" stroke="#01a982" stroke-width="2"/></svg>{{/if}}
+    <div>{{trendText}}</div>
+  </div>
   <div class="hs-cards">
     {{#each totals}}<div class="hs-total"><span>{{level}}</span><b class="{{cls}}">{{count}}</b><small>{{detail}}</small></div>{{/each}}
   </div>
@@ -170,6 +183,7 @@ tr.hs-click:hover td{background:rgba(1,169,130,.06)}
 <input type="radio" name="hs-tab" id="hs-t-c" class="hs-radio"/>
 <input type="radio" name="hs-tab" id="hs-t-v" class="hs-radio"/>
 <input type="radio" name="hs-tab" id="hs-t-r" class="hs-radio"/>
+<input type="checkbox" id="hs-hide-sys" class="hs-radio"/>
 <input type="radio" name="hs-w" id="hs-w-none" class="hs-radio" checked/>
 {{#each rows}}<input type="radio" name="hs-w" id="hs-w-{{index}}" class="hs-radio"/>{{/each}}
 
@@ -178,6 +192,7 @@ tr.hs-click:hover td{background:rgba(1,169,130,.06)}
   <label for="hs-t-c">Compliance controls</label>
   <label for="hs-t-v">Vulnerabilities</label>
   <label for="hs-t-r">RBAC</label>
+  {{#if hasSystemRows}}<label for="hs-hide-sys" class="hs-sysbtn"><span class="hs-off">Hide HKS system namespaces ({{systemRows}})</span><span class="hs-on">Show HKS system namespaces ({{systemRows}})</span></label>{{/if}}
 </div>
 
 <div class="hs-views">
@@ -185,12 +200,12 @@ tr.hs-click:hover td{background:rgba(1,169,130,.06)}
     <p class="hs-muted">Riskiest first. Click a workload to see everything both scanners found and how to fix it; click again to close.</p>
     <table class="table table-condensed hs-table"><thead><tr><th>Namespace</th><th>Workload</th><th class="hs-c">Critical</th><th class="hs-c">High</th><th class="hs-c">Medium</th><th class="hs-c">Low</th></tr></thead><tbody>
     {{#each rows}}
-      <tr class="hs-click hs-row-{{index}}">
+      <tr class="hs-click hs-row-{{index}}{{#if sys}} hs-sys{{/if}}">
         <td><label for="hs-w-{{index}}" class="hs-cell hs-open">{{ns}}</label><label for="hs-w-none" class="hs-cell hs-shut">{{ns}}</label></td>
         <td><label for="hs-w-{{index}}" class="hs-cell hs-open"><span class="hs-muted">{{kind}}</span> <b>{{name}}</b></label><label for="hs-w-none" class="hs-cell hs-shut"><span class="hs-muted">{{kind}}</span> <b>{{name}}</b></label></td>
         {{#each cells}}<td class="hs-c"><label for="hs-w-{{../index}}" class="hs-cell hs-open"><b class="{{cls}}">{{count}}</b></label><label for="hs-w-none" class="hs-cell hs-shut"><b class="{{cls}}">{{count}}</b></label></td>{{/each}}
       </tr>
-      <tr class="hs-detail hs-detail-{{index}}"><td colspan="6">
+      <tr class="hs-detail hs-detail-{{index}}{{#if sys}} hs-sys{{/if}}"><td colspan="6">
         {{#if hasKs}}<div class="hs-src">Kubescape · failed controls</div>
         <table class="table table-condensed hs-table"><thead><tr><th>Control</th><th>Severity</th><th>How to fix</th></tr></thead><tbody>
           {{#each ks}}<tr><td><b>{{id}}</b> {{name}}</td><td><span class="{{chip}}">{{severity}}</span></td><td>{{#if hasFix}}{{#each fix}}<div class="hs-fix">{{this}}</div>{{/each}}{{else}}<span class="hs-muted">see the control's documentation</span>{{/if}}</td></tr>{{/each}}

@@ -26,4 +26,10 @@ class ScanOutputSpec extends Specification {
         new PanelView(report: report, printAll: true).rows.size() == 90
         new PanelView(report: report).rows.size() == PanelView.MAX_ROWS
     }
+
+    def 'a quick scan does not claim to check images'() {
+        expect:
+        com.morpheuslab.hkssecurity.Scanner.steps(false)[3] == 'Trivy: misconfigurations and RBAC'
+        com.morpheuslab.hkssecurity.Scanner.steps(true)[3].contains('vulnerabilities')
+    }
 }

@@ -30,7 +30,7 @@ class ReportBuilder {
         Map vulns = LEVELS.collectEntries { lvl -> [(lvl): trivyTotals.vulns[lvl] ?: 0] }
         Map total = LEVELS.collectEntries { lvl -> [(lvl): (misconfig[lvl] as int) + (vulns[lvl] as int) + (trivyTotals.secretsBySeverity[lvl] ?: 0)] }
         [version: 1, scannedAt: System.currentTimeMillis(), seconds: s ? (int) ((System.currentTimeMillis() - s.startedAt) / 1000) : 0,
-         node: s?.node, user: s?.user, images: s?.images,
+         node: s?.node, user: s?.user, images: s?.images, appsOnly: s?.appsOnly,
          compliance: compliance,
          misconfig: misconfig, vulns: vulns, secrets: trivyTotals.secrets, rbac: trivyTotals.rbac,
          topControls: compliance.remove('topControls'), topCves: trivyTotals.topCves, rbacIssues: trivyTotals.rbacIssues,

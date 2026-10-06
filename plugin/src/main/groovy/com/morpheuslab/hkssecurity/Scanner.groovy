@@ -18,6 +18,9 @@ class Scanner {
     static final String KUBESCAPE_IMAGE = 'quay.io/kubescape/kubescape-cli:v4.0.15'
     static final String TRIVY_IMAGE = 'aquasec/trivy:0.75.0'
     static final long JOB_TIMEOUT_MILLIS = 60 * 60 * 1000L
+    /** Namespaces HKS itself runs (Kubernetes, network, storage, ingress, logging, monitoring) and our own. */
+    static final List<String> SYSTEM_NAMESPACES = ['kube-system', 'kube-public', 'kube-node-lease', 'calico-system', 'calico-apiserver',
+                                                   'tigera-operator', 'rook-ceph', 'ingress-nginx', 'logging', 'monitoring', NS]
 
     static final List<String> STEPS = [
         'Prepare the hks-security namespace',
@@ -27,6 +30,11 @@ class Scanner {
         'Build the report',
         'Remove the scan pods'
     ]
+
+    /** The step names of a quick scan (no image checks) or a full scan. */
+    static List<String> steps(boolean images) {
+        images ? STEPS : STEPS.collect { it.startsWith('Trivy') ? 'Trivy: misconfigurations and RBAC' : it }
+    }
 
     /** Live state per cluster, read by the status route. */
     static final Map<Long, ScanState> STATES = new ConcurrentHashMap<>()
@@ -46,12 +54,12 @@ class Scanner {
      * Start a scan unless one is already running. The cluster decides: scan jobs started by an earlier plugin
      * version or another Morpheus node count too. Returns the state, or null when the cluster is busy.
      */
-    static synchronized ScanState start(Long clusterId, String clusterName, KubeClient kube, String user, boolean images) {
+    static synchronized ScanState start(Long clusterId, String clusterName, KubeClient kube, String user, boolean images, boolean appsOnly) {
         ScanState running = STATES[clusterId]
         if (running?.running) return running
         if (activeJobs(kube)) return null
-        ScanState s = new ScanState(clusterId: clusterId, clusterName: clusterName, user: user, images: images,
-            steps: STEPS.collect { [name: it, status: 'waiting'] })
+        ScanState s = new ScanState(clusterId: clusterId, clusterName: clusterName, user: user, images: images, appsOnly: appsOnly,
+            steps: steps(images).collect { [name: it, status: 'waiting'] })
         STATES[clusterId] = s
         Thread.start("hks-security-scan-${clusterId}") { new Scanner(kube: kube, s: s).run() }
         s
@@ -70,10 +78,11 @@ class Scanner {
         try {
             step(0) { prepare() }
             String node = step(1) { pickNode() }
+            List<String> skip = s.appsOnly ? ['--exclude-namespaces', SYSTEM_NAMESPACES.join(',')] : []
             String ks = step(2) { runJob('kubescape', KUBESCAPE_IMAGE,
-                ['scan', 'framework', 'nsa,mitre', '--format', 'json', '--output', '/dev/stdout', '--logger', 'warning'], node) }
+                ['scan', 'framework', 'nsa,mitre', '--format', 'json', '--output', '/dev/stdout', '--logger', 'warning'] + skip, node) }
             List<String> trivyArgs = ['k8s', '--report', 'all', '--format', 'json', '--disable-node-collector', '--timeout', '50m',
-                                      '--scanners', s.images ? 'vuln,secret,misconfig,rbac' : 'misconfig,rbac']   // vuln and secret download every image
+                                      '--scanners', s.images ? 'vuln,secret,misconfig,rbac' : 'misconfig,rbac'] + skip   // vuln and secret download every image
             String trivy = step(3) { runJob('trivy', TRIVY_IMAGE, trivyArgs, node) }
             Map report = step(4) {
                 s.line = 'Merging the Kubescape and Trivy results'
@@ -206,6 +215,7 @@ class ScanState {
     String clusterName
     String user
     boolean images
+    boolean appsOnly
     List<Map> steps = []
     int current
     String line = 'Starting'

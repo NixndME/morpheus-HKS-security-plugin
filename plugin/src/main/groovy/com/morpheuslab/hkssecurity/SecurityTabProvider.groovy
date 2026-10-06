@@ -40,6 +40,7 @@ class SecurityTabProvider extends AbstractClusterTabProvider {
             csrfParam: csrf.param, csrfToken: csrf.value)
         ScanState s = Scanner.state(cluster.id)
         v.running = s?.running as boolean
+        v.runningImages = s?.images as boolean
         if (!v.running) {
             try { v.busyJobs = Scanner.activeJobs(KubeClient.of(morpheus, cluster)) } catch (Throwable ignored) { }
         }

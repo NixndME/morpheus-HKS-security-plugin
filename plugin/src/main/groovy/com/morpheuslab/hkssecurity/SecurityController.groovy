@@ -50,8 +50,9 @@ class SecurityController implements PluginController {
             return back(id, model)
         }
         boolean full = param(model, 'mode') == 'full'
-        ScanState started = Scanner.start(id, c.name, KubeClient.of(morpheus, c), model.user?.username, full)
-        if (started) log.info("HKS Security: ${model.user?.username} started a ${full ? 'full' : 'quick'} scan of cluster ${c.name} (${id})")
+        boolean appsOnly = param(model, 'appsOnly') == 'true'
+        ScanState started = Scanner.start(id, c.name, KubeClient.of(morpheus, c), model.user?.username, full, appsOnly)
+        if (started) log.info("HKS Security: ${model.user?.username} started a ${full ? 'full' : 'quick'} scan${appsOnly ? ' of application namespaces' : ''} of cluster ${c.name} (${id})")
         else log.info("HKS Security: ${model.user?.username} asked for a scan of cluster ${c.name} (${id}) while one is still running in the cluster")
         back(id, model)
     }

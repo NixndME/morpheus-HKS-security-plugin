@@ -25,7 +25,8 @@ class PanelView {
     boolean getHasReport() { report != null && !running }
     boolean getNeverScanned() { report == null && !running }     // after a failed first scan too, so it can be retried
     boolean getHasError() { error != null }
-    String getStepsJson() { groovy.json.JsonOutput.toJson(Scanner.STEPS) }
+    boolean runningImages
+    String getStepsJson() { groovy.json.JsonOutput.toJson(Scanner.steps(runningImages)) }
 
     // ---- report header ----
     Integer getScore() { report?.compliance?.score as Integer }
@@ -37,7 +38,42 @@ class PanelView {
         report?.scannedAt ? DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm').withZone(ZoneOffset.UTC).format(Instant.ofEpochMilli(report.scannedAt as long)) + ' UTC' : ''
     }
     String getScannedAgo() { ago(report?.scannedAt as Long) }
-    String getScanKind() { report?.images ? 'full scan (with image vulnerabilities)' : 'quick scan (configuration and RBAC)' }
+    String getScanKind() {
+        (report?.images ? 'full scan (with image vulnerabilities)' : 'quick scan (configuration and RBAC)') + (report?.appsOnly ? ', application namespaces only' : '')
+    }
+    boolean getAppsOnly() { report?.appsOnly as boolean }
+
+    // ---- history ----
+    List<Map> getHistory() { ((report?.history ?: []) as List<Map>) }
+    /** Scans of the same kind as the last one (same scanners and scope), so the line compares like with like. */
+    List<Map> getSameKind() {
+        Map now = history ? history[-1] : null
+        now ? history.findAll { it.images == now.images && it.appsOnly == now.appsOnly } : []
+    }
+    boolean getHasTrend() { sameKind.size() >= 2 }
+    /** Points of the compliance line (0-100%) across the last scans, for a 160x40 SVG. */
+    String getTrendPoints() {
+        List<Map> h = sameKind
+        if (h.size() < 2) return ''
+        h.withIndex().collect { Map e, int i -> "${(int) (i * 160 / (h.size() - 1))},${40 - (int) (((e.score ?: 0) as int) * 40 / 100)}" }.join(' ')
+    }
+    int getHistorySize() { sameKind.size() }
+
+    /** What changed since the last scan of the same kind (same scanners and scope). */
+    String getTrendText() {
+        List<Map> h = history
+        Map now = h ? h[-1] : null
+        Map before = h.size() > 1 ? h[0..-2].reverse().find { it.images == now.images && it.appsOnly == now.appsOnly } : null
+        if (!before) return 'First scan of this kind.'
+        int ds = ((now.score ?: 0) as int) - ((before.score ?: 0) as int)
+        List<String> parts = []
+        if (ds) parts << "compliance ${ds > 0 ? 'up' : 'down'} ${Math.abs(ds)} point${Math.abs(ds) == 1 ? '' : 's'}"
+        ['critical', 'high'].each { String level ->
+            int d = ((now[level] ?: 0) as int) - ((before[level] ?: 0) as int)
+            if (d) parts << "${Math.abs(d)} ${d > 0 ? 'more' : 'fewer'} ${level}"
+        }
+        parts ? "Since the last scan of the same kind: ${parts.join(', ')}." : 'No change since the last scan of the same kind.'
+    }
     boolean getImagesScanned() { report?.images as boolean }
 
     List<Map> getTotals() {
@@ -58,7 +94,7 @@ class PanelView {
         List<Map> all = (report?.workloads ?: []) as List<Map>
         (printAll ? all : all.take(MAX_ROWS)).withIndex().collect { Map w, int i ->
             Map sev = w.sev as Map
-            [index: i, ns: w.ns, kind: w.kind, name: w.name,
+            [index: i, ns: w.ns, kind: w.kind, name: w.name, sys: Scanner.SYSTEM_NAMESPACES.contains(w.ns),
              cells: LEVELS.collect { [count: sev[it] ?: 0, cls: sev[it] ? "hs-${it}" : 'hs-zero'] },
              ks: (w.ks as List<Map>).collect { it + [chip: chip(it.severity as String), hasFix: !(it.fix as List).isEmpty()] },
              tm: (w.tm as List<Map>).collect { it + [chip: chip(it.severity as String)] },
@@ -67,6 +103,9 @@ class PanelView {
              hasKs: !(w.ks as List).isEmpty(), hasTm: !(w.tm as List).isEmpty(), hasVuln: !(w.vuln as List).isEmpty(), hasSecrets: !(w.secrets as List).isEmpty()]
         }
     }
+    int getSystemRows() { rows.count { it.sys } as int }
+    boolean getHasSystemRows() { systemRows > 0 }
+
     int getHiddenRows() { printAll ? 0 : Math.max(0, ((report?.workloads ?: []) as List).size() - MAX_ROWS) }
 
     /** Click-to-toggle rows without reloading: one radio per workload. */

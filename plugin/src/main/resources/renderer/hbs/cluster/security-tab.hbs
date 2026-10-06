@@ -1,0 +1,240 @@
+<div class="hs-panel">
+<style>
+.hs-panel{--hs-line:rgba(125,138,148,.35);--hs-muted:#7d8a94;--hs-green:#01a982;padding:4px 2px 14px}
+.hs-panel h3,.hs-panel h4,.hs-panel h5{text-transform:none}
+.hs-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 0}
+.hs-spacer{flex:1}
+.hs-muted{color:var(--hs-muted)}
+.hs-title{font-weight:600;font-size:15px}
+.hs-panel .hs-btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:110px;height:30px;padding:0 14px;margin:0;font-size:12px;text-transform:none;white-space:nowrap}
+.hs-panel form:not([popover]){margin:0;display:inline-flex}
+.hs-card{padding:16px 18px;border:1px solid var(--hs-line);border-radius:6px;margin:10px 0}
+.hs-error{border-left:3px solid #d64545}
+.hs-chip{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;font-weight:600;color:#fff;white-space:nowrap;text-transform:capitalize}
+.hs-chip-critical{background:#8e1b1b}.hs-chip-high{background:#d64545}.hs-chip-medium{background:#d4880f}.hs-chip-low{background:#2f7fc1}
+.hs-critical{color:#c62828}.hs-high{color:#e05252}.hs-medium{color:#d4880f}.hs-low{color:#2f7fc1}.hs-good{color:var(--hs-green)}.hs-zero{color:var(--hs-muted);font-weight:normal!important}
+/* live scan */
+.hs-live{display:flex;gap:28px;align-items:center}
+.hs-ring{width:92px;height:92px;border-radius:50%;position:relative;flex:none}
+.hs-ring:before{content:"";position:absolute;inset:0;border-radius:50%;border:6px solid rgba(1,169,130,.18);border-top-color:var(--hs-green);animation:hs-spin 1s linear infinite}
+.hs-ring:after{content:"";position:absolute;inset:16px;border-radius:50%;border:4px solid transparent;border-bottom-color:rgba(1,169,130,.7);animation:hs-spin 1.6s linear infinite reverse}
+.hs-ring span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--hs-green);letter-spacing:.06em}
+@keyframes hs-spin{to{transform:rotate(360deg)}}
+.hs-steps{list-style:none;margin:8px 0 0;padding:0}
+.hs-steps li{padding:3px 0;display:flex;gap:10px;align-items:center}
+.hs-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--hs-line);flex:none}
+.hs-s-running .hs-dot{border-color:var(--hs-green);background:var(--hs-green);animation:hs-pulse 1s ease-in-out infinite}
+.hs-s-done .hs-dot{border-color:var(--hs-green);background:var(--hs-green)}
+.hs-s-failed .hs-dot{border-color:#d64545;background:#d64545}
+.hs-s-waiting{color:var(--hs-muted)}
+@keyframes hs-pulse{50%{opacity:.35}}
+.hs-line{font-family:monospace;font-size:12px;margin-top:10px;padding:6px 10px;border-radius:4px;background:rgba(125,138,148,.12);min-height:18px}
+.hs-progress{height:4px;border-radius:2px;background:rgba(125,138,148,.2);margin-top:10px;overflow:hidden}
+.hs-progress div{height:100%;background:var(--hs-green);transition:width .6s}
+/* report */
+.hs-top{display:flex;gap:26px;flex-wrap:wrap;align-items:center;margin:6px 0 14px}
+.hs-score{width:118px;height:118px;position:relative;flex:none}
+.hs-score div{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.hs-score b{font-size:26px;line-height:1}.hs-score span{font-size:11px;color:var(--hs-muted)}
+.hs-fw{min-width:200px}.hs-fw div{margin:6px 0}
+.hs-bartrack{height:6px;border-radius:3px;background:rgba(125,138,148,.2);margin-top:3px;overflow:hidden}.hs-bartrack i{display:block;height:100%;background:var(--hs-green)}
+.hs-cards{display:flex;gap:8px;flex-wrap:wrap}
+.hs-total{min-width:112px;padding:8px 12px;border:1px solid var(--hs-line);border-radius:6px}
+.hs-total span{display:block;font-size:12px;color:var(--hs-muted)}.hs-total b{font-size:24px;font-weight:600}.hs-total small{display:block;font-size:11px;color:var(--hs-muted)}
+.hs-panel input.hs-radio{display:none}
+.hs-tabs{display:flex;gap:4px;border-bottom:1px solid var(--hs-line);margin:8px 0 10px}
+.hs-tabs label{margin:0;padding:7px 14px;cursor:pointer;font-weight:normal;border-bottom:2px solid transparent}
+.hs-view{display:none}
+#hs-t-w:checked~.hs-views .hs-view-w,#hs-t-c:checked~.hs-views .hs-view-c,#hs-t-v:checked~.hs-views .hs-view-v,#hs-t-r:checked~.hs-views .hs-view-r{display:block}
+#hs-t-w:checked~.hs-tabs label[for=hs-t-w],#hs-t-c:checked~.hs-tabs label[for=hs-t-c],#hs-t-v:checked~.hs-tabs label[for=hs-t-v],#hs-t-r:checked~.hs-tabs label[for=hs-t-r]{border-bottom-color:var(--hs-green);color:var(--hs-green)}
+.hs-table td,.hs-table th{vertical-align:middle!important}.hs-table th{white-space:nowrap}
+.hs-c{text-align:center;width:52px}
+.hs-cell{display:block;margin:0;font-weight:normal;cursor:pointer}
+.hs-shut{display:none!important}
+tr.hs-click:hover td{background:rgba(1,169,130,.06)}
+.hs-panel tr.hs-detail{display:none}
+.hs-panel tr.hs-detail>td{padding:6px 14px 16px 16px!important;border-left:3px solid var(--hs-green)}
+.hs-panel tr.hs-detail table,.hs-panel tr.hs-detail table tr,.hs-panel tr.hs-detail table td,.hs-panel tr.hs-detail table th{background:transparent!important;color:inherit!important}
+.hs-panel tr.hs-detail table tbody tr:nth-child(odd) td{background:rgba(125,138,148,.08)!important}
+.hs-fix{font:12px monospace;color:var(--hs-muted)}
+.hs-src{font-size:11px;color:var(--hs-muted);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 2px}
+.hs-pop{position:fixed;inset:0;margin:auto;width:min(520px,92vw);height:fit-content;padding:16px;border:1px solid var(--hs-line);border-radius:6px;background:#2b3036;color:#e6eaee;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.hs-pop::backdrop{background:rgba(0,0,0,.4)}
+{{{rowCss}}}
+</style>
+
+<div class="hs-bar">
+  <span class="hs-title">HKS Security</span>
+  <span class="hs-muted">Trivy + Kubescape</span>
+  {{#if hasReport}}<span class="hs-muted">· last scan {{scannedAgo}} · {{scanKind}}</span>{{/if}}
+  <span class="hs-spacer"></span>
+  {{#if hasReport}}
+    <a class="btn btn-default hs-btn" href="/plugin/hks-security/report?clusterId={{clusterId}}" target="_blank" rel="noopener">Export PDF</a>
+    {{#if canScan}}{{#unless busy}}
+    <form method="post" action="/plugin/hks-security/scan"><input type="hidden" name="{{csrfParam}}" value="{{csrfToken}}"/><input type="hidden" name="clusterId" value="{{clusterId}}"/><input type="hidden" name="mode" value="quick"/><button class="btn btn-primary hs-btn" type="submit">Quick scan</button></form>
+    <form method="post" action="/plugin/hks-security/scan"><input type="hidden" name="{{csrfParam}}" value="{{csrfToken}}"/><input type="hidden" name="clusterId" value="{{clusterId}}"/><input type="hidden" name="mode" value="full"/><button class="btn btn-primary hs-btn" type="submit">Full scan</button></form>
+    <button type="button" class="button button-red hs-btn" popovertarget="hs-remove">Remove</button>
+    <form id="hs-remove" popover class="hs-pop" method="post" action="/plugin/hks-security/remove">
+      <input type="hidden" name="{{csrfParam}}" value="{{csrfToken}}"/><input type="hidden" name="clusterId" value="{{clusterId}}"/>
+      <p><b>Remove HKS Security from {{clusterName}}?</b></p>
+      <p>This deletes the <code>hks-security</code> namespace (with the last report) and the scanner's read-only cluster role. Nothing else in the cluster changes.</p>
+      <div style="display:flex;gap:8px"><button class="button button-red hs-btn" type="submit">Remove</button><button type="button" class="btn btn-default hs-btn" popovertarget="hs-remove" popovertargetaction="hide">Cancel</button></div>
+    </form>
+    {{/unless}}{{/if}}
+  {{/if}}
+</div>
+
+{{#if hasError}}<div class="hs-card hs-error">{{error}}</div>{{/if}}
+{{#if busy}}<div class="hs-card hs-error">A scan started earlier is still running in the cluster ({{#each busyJobs}}{{this}} {{/each}}). Wait for it to finish, or remove HKS Security from this cluster to stop it.</div>{{/if}}
+
+{{#if neverScanned}}
+<div class="hs-card">
+  <h3 style="margin-top:0">Scan {{clusterName}} for security issues</h3>
+  <p>HKS Security runs <b>Kubescape</b> (compliance with the NSA and MITRE frameworks) and <b>Trivy</b> (misconfigurations, RBAC,
+    and in a full scan image vulnerabilities and secrets) once, then shows one combined report here.</p>
+  <ul>
+    <li>A namespace <code>hks-security</code> and a read-only service account are created on the first scan.</li>
+    <li>The scanners run as one-off jobs, one after the other, on the node with the most free memory (at most 1 CPU and 1 GiB each), then they are removed. Nothing runs between scans.</li>
+    <li>A quick scan takes about a minute. A full scan downloads every container image to check it, so it takes much longer.</li>
+  </ul>
+  {{#if canScan}}{{#unless busy}}
+  <div style="display:flex;gap:8px;margin-top:12px">
+    <form method="post" action="/plugin/hks-security/scan"><input type="hidden" name="{{csrfParam}}" value="{{csrfToken}}"/><input type="hidden" name="clusterId" value="{{clusterId}}"/><input type="hidden" name="mode" value="quick"/><button class="btn btn-primary hs-btn" type="submit">Quick scan</button></form>
+    <form method="post" action="/plugin/hks-security/scan"><input type="hidden" name="{{csrfParam}}" value="{{csrfToken}}"/><input type="hidden" name="clusterId" value="{{clusterId}}"/><input type="hidden" name="mode" value="full"/><button class="btn btn-default hs-btn" type="submit">Full scan</button></form>
+  </div>
+  {{/unless}}{{else}}<p class="hs-muted">Ask someone with full HKS Security access to run the first scan.</p>{{/if}}
+</div>
+{{/if}}
+
+{{#if running}}
+<div class="hs-card">
+  <div class="hs-live">
+    <div class="hs-ring"><span>HKS</span></div>
+    <div style="flex:1">
+      <h3 style="margin:0">Scanning {{clusterName}} <span class="hs-muted" id="hs-elapsed" style="font-size:13px"></span></h3>
+      <ul class="hs-steps" id="hs-steps"></ul>
+      <div class="hs-progress"><div id="hs-bar" style="width:0"></div></div>
+      <div class="hs-line" id="hs-line">Starting…</div>
+      {{#if canScan}}<form method="post" action="/plugin/hks-security/cancel" style="margin-top:10px"><input type="hidden" name="{{csrfParam}}" value="{{csrfToken}}"/><input type="hidden" name="clusterId" value="{{clusterId}}"/><button class="btn btn-default hs-btn" type="submit">Cancel scan</button></form>{{/if}}
+    </div>
+  </div>
+</div>
+<script nonce="{{nonce}}">
+(function () {
+  var names = {{{stepsJson}}};
+  function draw(s) {
+    var ul = document.getElementById('hs-steps');
+    if (!ul) return;
+    ul.innerHTML = '';
+    (s.steps || names.map(function (n) { return { name: n, status: 'waiting' }; })).forEach(function (st) {
+      var li = document.createElement('li');
+      li.className = 'hs-s-' + st.status;
+      li.innerHTML = '<span class="hs-dot"></span><span></span>';
+      li.lastChild.textContent = st.name + (st.status === 'done' && st.seconds != null ? '  ·  ' + st.seconds + 's' : '');
+      ul.appendChild(li);
+    });
+    var done = (s.steps || []).filter(function (x) { return x.status === 'done'; }).length;
+    document.getElementById('hs-bar').style.width = Math.round(100 * (done + 0.5) / names.length) + '%';
+    document.getElementById('hs-line').textContent = s.line || '';
+    if (s.elapsed != null) document.getElementById('hs-elapsed').textContent = Math.floor(s.elapsed / 60) + 'm ' + (s.elapsed % 60) + 's';
+  }
+  function poll() {
+    fetch('/plugin/hks-security/status?clusterId={{clusterId}}', { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (s) { draw(s); if (s.running) setTimeout(poll, 2000); else setTimeout(function () { location.reload(); }, 1200); })
+      .catch(function () { setTimeout(poll, 4000); });
+  }
+  draw({});
+  poll();
+})();
+</script>
+{{/if}}
+
+{{#if hasReport}}
+<div class="hs-top">
+  <div class="hs-score" title="Kubescape compliance score">
+    <svg width="118" height="118" viewBox="0 0 118 118"><circle cx="59" cy="59" r="50" fill="none" stroke="rgba(125,138,148,.25)" stroke-width="10"/>
+      <circle cx="59" cy="59" r="50" fill="none" stroke="#01a982" stroke-width="10" stroke-linecap="round" stroke-dasharray="{{scoreDash}} 314" transform="rotate(-90 59 59)"/></svg>
+    <div><b class="{{scoreCls}}">{{score}}%</b><span>compliance</span></div>
+  </div>
+  <div class="hs-fw">
+    {{#each frameworks}}<div><span class="hs-muted">{{name}}</span> <b>{{score}}%</b><div class="hs-bartrack"><i style="width:{{score}}%"></i></div></div>{{/each}}
+    <div class="hs-muted" style="font-size:12px">Scanned {{scannedAt}}</div>
+  </div>
+  <div class="hs-cards">
+    {{#each totals}}<div class="hs-total"><span>{{level}}</span><b class="{{cls}}">{{count}}</b><small>{{detail}}</small></div>{{/each}}
+  </div>
+</div>
+
+<input type="radio" name="hs-tab" id="hs-t-w" class="hs-radio" checked/>
+<input type="radio" name="hs-tab" id="hs-t-c" class="hs-radio"/>
+<input type="radio" name="hs-tab" id="hs-t-v" class="hs-radio"/>
+<input type="radio" name="hs-tab" id="hs-t-r" class="hs-radio"/>
+<input type="radio" name="hs-w" id="hs-w-none" class="hs-radio" checked/>
+{{#each rows}}<input type="radio" name="hs-w" id="hs-w-{{index}}" class="hs-radio"/>{{/each}}
+
+<div class="hs-tabs">
+  <label for="hs-t-w">Workloads</label>
+  <label for="hs-t-c">Compliance controls</label>
+  <label for="hs-t-v">Vulnerabilities</label>
+  <label for="hs-t-r">RBAC</label>
+</div>
+
+<div class="hs-views">
+  <div class="hs-view hs-view-w">
+    <p class="hs-muted">Riskiest first. Click a workload to see everything both scanners found and how to fix it; click again to close.</p>
+    <table class="table table-condensed hs-table"><thead><tr><th>Namespace</th><th>Workload</th><th class="hs-c">Critical</th><th class="hs-c">High</th><th class="hs-c">Medium</th><th class="hs-c">Low</th></tr></thead><tbody>
+    {{#each rows}}
+      <tr class="hs-click hs-row-{{index}}">
+        <td><label for="hs-w-{{index}}" class="hs-cell hs-open">{{ns}}</label><label for="hs-w-none" class="hs-cell hs-shut">{{ns}}</label></td>
+        <td><label for="hs-w-{{index}}" class="hs-cell hs-open"><span class="hs-muted">{{kind}}</span> <b>{{name}}</b></label><label for="hs-w-none" class="hs-cell hs-shut"><span class="hs-muted">{{kind}}</span> <b>{{name}}</b></label></td>
+        {{#each cells}}<td class="hs-c"><label for="hs-w-{{../index}}" class="hs-cell hs-open"><b class="{{cls}}">{{count}}</b></label><label for="hs-w-none" class="hs-cell hs-shut"><b class="{{cls}}">{{count}}</b></label></td>{{/each}}
+      </tr>
+      <tr class="hs-detail hs-detail-{{index}}"><td colspan="6">
+        {{#if hasKs}}<div class="hs-src">Kubescape · failed controls</div>
+        <table class="table table-condensed hs-table"><thead><tr><th>Control</th><th>Severity</th><th>How to fix</th></tr></thead><tbody>
+          {{#each ks}}<tr><td><b>{{id}}</b> {{name}}</td><td><span class="{{chip}}">{{severity}}</span></td><td>{{#if hasFix}}{{#each fix}}<div class="hs-fix">{{this}}</div>{{/each}}{{else}}<span class="hs-muted">see the control's documentation</span>{{/if}}</td></tr>{{/each}}
+        </tbody></table>{{/if}}
+        {{#if hasTm}}<div class="hs-src">Trivy · misconfigurations</div>
+        <table class="table table-condensed hs-table"><thead><tr><th>Check</th><th>Severity</th><th>How to fix</th></tr></thead><tbody>
+          {{#each tm}}<tr><td><b>{{id}}</b> {{title}}</td><td><span class="{{chip}}">{{severity}}</span></td><td class="hs-fix">{{fix}}</td></tr>{{/each}}
+        </tbody></table>{{/if}}
+        {{#if hasVuln}}<div class="hs-src">Trivy · image vulnerabilities</div>
+        <table class="table table-condensed hs-table"><thead><tr><th>CVE</th><th>Severity</th><th>Package</th><th>Installed</th><th>Fixed in</th></tr></thead><tbody>
+          {{#each vuln}}<tr><td><b>{{id}}</b> <span class="hs-muted">{{title}}</span></td><td><span class="{{chip}}">{{severity}}</span></td><td>{{pkg}}</td><td>{{installed}}</td><td>{{fixed}}</td></tr>{{/each}}
+        </tbody></table>{{/if}}
+        {{#if hasSecrets}}<div class="hs-src">Trivy · secrets in images</div>
+        <table class="table table-condensed hs-table"><tbody>{{#each secrets}}<tr><td><b>{{rule}}</b> {{title}}</td><td><span class="{{chip}}">{{severity}}</span></td><td class="hs-fix">{{target}}</td></tr>{{/each}}</tbody></table>{{/if}}
+      </td></tr>
+    {{/each}}
+    </tbody></table>
+    {{#if hiddenRows}}<p class="hs-muted">{{hiddenRows}} more workloads with fewer findings are in the PDF export.</p>{{/if}}
+  </div>
+
+  <div class="hs-view hs-view-c">
+    <p class="hs-muted">Kubescape controls that failed, most severe first.</p>
+    <table class="table table-condensed hs-table"><thead><tr><th>Control</th><th>Severity</th><th class="hs-c">Failed</th><th class="hs-c">Passed</th></tr></thead><tbody>
+      {{#each controls}}<tr><td><b>{{id}}</b> {{name}}</td><td><span class="{{chip}}">{{severity}}</span></td><td class="hs-c">{{failed}}</td><td class="hs-c">{{passed}}</td></tr>{{/each}}
+    </tbody></table>
+  </div>
+
+  <div class="hs-view hs-view-v">
+    {{#if hasCves}}
+    <p class="hs-muted">The most severe vulnerabilities in the cluster's images, and how many workloads use them.</p>
+    <table class="table table-condensed hs-table"><thead><tr><th>CVE</th><th>Severity</th><th>Package</th><th>Fixed in</th><th class="hs-c">Workloads</th></tr></thead><tbody>
+      {{#each cves}}<tr><td><b>{{id}}</b> <span class="hs-muted">{{title}}</span></td><td><span class="{{chip}}">{{severity}}</span></td><td>{{pkg}}</td><td>{{fixed}}</td><td class="hs-c">{{workloads}}</td></tr>{{/each}}
+    </tbody></table>
+    {{else}}<div class="hs-card">{{#if imagesScanned}}No image vulnerabilities found.{{else}}Image vulnerabilities are checked by a <b>Full scan</b>, which downloads every container image.{{/if}}</div>{{/if}}
+  </div>
+
+  <div class="hs-view hs-view-r">
+    {{#if hasRbac}}
+    <p class="hs-muted">Roles and bindings that grant more than they should (Trivy).</p>
+    <table class="table table-condensed hs-table"><thead><tr><th>Resource</th><th>Issue</th><th>Severity</th></tr></thead><tbody>
+      {{#each rbacIssues}}<tr><td>{{resource}}</td><td><b>{{id}}</b> {{title}}</td><td><span class="{{chip}}">{{severity}}</span></td></tr>{{/each}}
+    </tbody></table>
+    {{else}}<div class="hs-card">No RBAC issues found.</div>{{/if}}
+  </div>
+</div>
+{{/if}}
+</div>

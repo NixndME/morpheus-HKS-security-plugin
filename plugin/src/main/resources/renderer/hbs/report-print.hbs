@@ -1,0 +1,64 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>HKS Security report · {{clusterName}}</title>
+<style>
+body{font:13px/1.45 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;color:#1f2428;margin:28px 36px;background:#fff}
+h1{font-size:22px;margin:0}h2{font-size:16px;margin:22px 0 8px;border-bottom:2px solid #01a982;padding-bottom:4px}h3{font-size:14px;margin:16px 0 4px}
+.muted{color:#6b757d}.bar{display:flex;align-items:center;gap:12px}.spacer{flex:1}
+.btn{border:0;border-radius:16px;background:#01a982;color:#fff;padding:7px 16px;font-size:13px;cursor:pointer}
+.top{display:flex;gap:28px;align-items:center;margin:16px 0}
+.score{font-size:40px;font-weight:700;color:#01a982;line-height:1}
+.cards{display:flex;gap:10px;flex-wrap:wrap}.card{border:1px solid #d5dbe0;border-radius:6px;padding:8px 12px;min-width:110px}
+.card b{font-size:22px;display:block}.card small{color:#6b757d}
+table{width:100%;border-collapse:collapse;margin:4px 0 10px}th,td{text-align:left;padding:4px 6px;border-bottom:1px solid #e3e7ea;vertical-align:top}
+th{font-size:11px;text-transform:uppercase;color:#6b757d}
+.chip{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;font-weight:600;color:#fff;text-transform:capitalize}
+.chip-critical{background:#8e1b1b}.chip-high{background:#d64545}.chip-medium{background:#d4880f}.chip-low{background:#2f7fc1}
+.critical{color:#c62828}.high{color:#d64545}.medium{color:#c07a0b}.low{color:#2f7fc1}.zero{color:#9aa4ab}
+.fix{font:11px monospace;color:#4b555d}.wl{page-break-inside:avoid;border-left:3px solid #01a982;padding-left:10px;margin:14px 0}
+@media print{.noprint{display:none}body{margin:12mm}}
+</style></head><body>
+<div class="bar">
+  <div><h1>HKS Security report</h1><div class="muted">Cluster <b>{{clusterName}}</b> · scanned {{scannedAt}} · {{scanKind}} · Trivy + Kubescape</div></div>
+  <span class="spacer"></span>
+  <button class="btn noprint" id="print">Save as PDF</button>
+</div>
+
+<div class="top">
+  <div><div class="score">{{score}}%</div><div class="muted">compliance</div></div>
+  <div>{{#each frameworks}}<div>{{name}} <b>{{score}}%</b></div>{{/each}}</div>
+  <div class="cards">{{#each totals}}<div class="card"><span class="muted">{{level}}</span><b class="{{cls}}">{{count}}</b><small>{{detail}}</small></div>{{/each}}</div>
+</div>
+
+<h2>Compliance controls that failed (Kubescape)</h2>
+<table><thead><tr><th>Control</th><th>Severity</th><th>Failed</th><th>Passed</th></tr></thead><tbody>
+{{#each controls}}<tr><td><b>{{id}}</b> {{name}}</td><td><span class="chip chip-{{severity}}">{{severity}}</span></td><td>{{failed}}</td><td>{{passed}}</td></tr>{{/each}}
+</tbody></table>
+
+<h2>Image vulnerabilities (Trivy)</h2>
+{{#if hasCves}}<table><thead><tr><th>CVE</th><th>Severity</th><th>Package</th><th>Fixed in</th><th>Workloads</th></tr></thead><tbody>
+{{#each cves}}<tr><td><b>{{id}}</b> <span class="muted">{{title}}</span></td><td><span class="chip chip-{{severity}}">{{severity}}</span></td><td>{{pkg}}</td><td>{{fixed}}</td><td>{{workloads}}</td></tr>{{/each}}
+</tbody></table>{{else}}<p class="muted">{{#if imagesScanned}}No image vulnerabilities found.{{else}}Not part of this scan: run a full scan to include image vulnerabilities.{{/if}}</p>{{/if}}
+
+<h2>RBAC issues (Trivy)</h2>
+{{#if hasRbac}}<table><thead><tr><th>Resource</th><th>Issue</th><th>Severity</th></tr></thead><tbody>
+{{#each rbacIssues}}<tr><td>{{resource}}</td><td><b>{{id}}</b> {{title}}</td><td><span class="chip chip-{{severity}}">{{severity}}</span></td></tr>{{/each}}
+</tbody></table>{{else}}<p class="muted">No RBAC issues found.</p>{{/if}}
+
+<h2>Workloads</h2>
+<table><thead><tr><th>Namespace</th><th>Workload</th><th>Critical</th><th>High</th><th>Medium</th><th>Low</th></tr></thead><tbody>
+{{#each rows}}<tr><td>{{ns}}</td><td>{{kind}} <b>{{name}}</b></td>{{#each cells}}<td class="{{cls}}">{{count}}</td>{{/each}}</tr>{{/each}}
+</tbody></table>
+
+<h2>Details per workload</h2>
+{{#each rows}}<div class="wl">
+  <h3>{{kind}} {{ns}}/{{name}}</h3>
+  {{#if hasKs}}<table><thead><tr><th>Kubescape control</th><th>Severity</th><th>How to fix</th></tr></thead><tbody>
+  {{#each ks}}<tr><td><b>{{id}}</b> {{name}}</td><td><span class="chip chip-{{severity}}">{{severity}}</span></td><td>{{#each fix}}<div class="fix">{{this}}</div>{{/each}}</td></tr>{{/each}}</tbody></table>{{/if}}
+  {{#if hasTm}}<table><thead><tr><th>Trivy check</th><th>Severity</th><th>How to fix</th></tr></thead><tbody>
+  {{#each tm}}<tr><td><b>{{id}}</b> {{title}}</td><td><span class="chip chip-{{severity}}">{{severity}}</span></td><td class="fix">{{fix}}</td></tr>{{/each}}</tbody></table>{{/if}}
+  {{#if hasVuln}}<table><thead><tr><th>CVE</th><th>Severity</th><th>Package</th><th>Installed</th><th>Fixed in</th></tr></thead><tbody>
+  {{#each vuln}}<tr><td><b>{{id}}</b></td><td><span class="chip chip-{{severity}}">{{severity}}</span></td><td>{{pkg}}</td><td>{{installed}}</td><td>{{fixed}}</td></tr>{{/each}}</tbody></table>{{/if}}
+</div>{{/each}}
+<p class="muted">HKS Security report for Morpheus.</p>
+<script nonce="{{nonce}}">document.getElementById('print').addEventListener('click', function () { window.print(); });</script>
+</body></html>
